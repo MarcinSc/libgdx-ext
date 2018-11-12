@@ -13,7 +13,7 @@
 
     <modules>
         <module>libgdx-pluggable-shader</module>
-        <module>libgdx-plugin-cellshading</module>
+        <module>libgdx-plugin-celshading</module>
         <module>libgdx-demo</module>
     </modules>
 

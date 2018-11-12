@@ -17,7 +17,7 @@
         </dependency>
         <dependency>
             <groupId>com.gempukku.libgdx</groupId>
-            <artifactId>libgdx-plugin-cellshading</artifactId>
+            <artifactId>libgdx-plugin-celshading</artifactId>
             <version>${project.version}</version>
         </dependency>
 

@@ -1,4 +1,4 @@
-package com.gempukku.libgdx.demo.benchmark.scene;
+package com.gempukku.libgdx.demo.scene;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
-import com.gempukku.libgdx.demo.benchmark.DemoScene;
+import com.gempukku.libgdx.demo.DemoScene;
 import com.gempukku.libgdx.plugin.cellshading.CelShadingAttribute;
 import com.gempukku.libgdx.plugin.cellshading.CelShadingPPDiffuseTransform;
 import com.gempukku.libgdx.plugin.cellshading.CelShadingPVDiffuseTransform;
@@ -196,14 +196,11 @@ public class RedCubeDemoScene implements DemoScene {
         camera.update();
 
         PointLight pointLight = new PointLight();
-        pointLight.set(Color.WHITE, 1, 2, 2.5f, 16f);
+        pointLight.set(Color.WHITE, 1, 2, 2.5f, 8f);
 
         environment = new Environment();
 
         environment.add(pointLight);
-
-        float ambientLight = 0.2f;
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientLight, ambientLight, ambientLight, 1f));
     }
 
     @Override
