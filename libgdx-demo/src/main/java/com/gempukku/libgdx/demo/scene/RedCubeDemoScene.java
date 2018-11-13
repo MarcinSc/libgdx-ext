@@ -10,9 +10,9 @@ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.gempukku.libgdx.demo.DemoScene;
-import com.gempukku.libgdx.plugin.cellshading.CelShadingAttribute;
-import com.gempukku.libgdx.plugin.cellshading.CelShadingPPDiffuseTransform;
-import com.gempukku.libgdx.plugin.cellshading.CelShadingPVDiffuseTransform;
+import com.gempukku.libgdx.plugin.cellshading.count.CelShadingCountAttribute;
+import com.gempukku.libgdx.plugin.cellshading.count.CelShadingCountPPDiffuseTransform;
+import com.gempukku.libgdx.plugin.cellshading.count.CelShadingCountPVDiffuseTransform;
 import com.gempukku.libgdx.shader.pluggable.DefaultPluggableShaderBuilder;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderProvider;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderUtil;
@@ -106,7 +106,7 @@ public class RedCubeDemoScene implements DemoScene {
         perVertexLightingApplyCall.addLightWrapper(new SpecularTexturePVTransform());
         perVertexLightingApplyCall.addLightWrapper(new SpecularColorPVTransform());
 
-        perVertexLightingApplyCall.addLightWrapper(new CelShadingPVDiffuseTransform(10));
+        perVertexLightingApplyCall.addLightWrapper(new CelShadingCountPVDiffuseTransform(10));
 
         defaultPluggableShaderBuilder.addColorProcessor(perVertexLightingApplyCall);
 
@@ -156,7 +156,7 @@ public class RedCubeDemoScene implements DemoScene {
         applyPerPixelLighting.addLightWrapper(new SpecularTexturePPTransform());
         applyPerPixelLighting.addLightWrapper(new SpecularColorPPTransform());
 
-        applyPerPixelLighting.addLightWrapper(new CelShadingPPDiffuseTransform(10));
+        applyPerPixelLighting.addLightWrapper(new CelShadingCountPPDiffuseTransform(10));
 
         defaultPluggableShaderBuilder.addColorProcessor(applyPerPixelLighting);
 
@@ -174,8 +174,9 @@ public class RedCubeDemoScene implements DemoScene {
 
         ModelBuilder modelBuilder = new ModelBuilder();
         cubeModel = modelBuilder.createBox(1, 1, 1,
-                new Material(ColorAttribute.createDiffuse(1, 0, 0, 1),
-                        CelShadingAttribute.createCelShadingAttribute(10)),
+                new Material(
+                        ColorAttribute.createDiffuse(1, 0, 0, 1),
+                        CelShadingCountAttribute.createAttribute(10)),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         cube = new ModelInstance(cubeModel);
         cube.transform.rotate(1f, 1f, 0, 50);
@@ -187,7 +188,9 @@ public class RedCubeDemoScene implements DemoScene {
                 2, yPos, 2,
                 2, yPos, -2,
                 0, 1, 0,
-                new Material(ColorAttribute.createDiffuse(1, 1, 1, 1)), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+                new Material(
+                        ColorAttribute.createDiffuse(1, 1, 1, 1)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         base = new ModelInstance(baseModel);
 
         camera.position.set(0, 0, 2);

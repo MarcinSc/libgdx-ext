@@ -150,7 +150,7 @@ public class PluggableShaderDemo extends ApplicationAdapter {
         config.resizable = false;
 
         config.foregroundFPS = 0;
-        config.vSyncEnabled = false;
+        config.vSyncEnabled = true;
         new LwjglApplication(new PluggableShaderDemo(800, 600), config);
     }
 }
