@@ -43,16 +43,10 @@ public class PerPixelLightingCall extends AbstractPluggableVertexFunctionCall {
     @Override
     protected boolean isProcessingForRenderable(Renderable renderable) {
         long vertexMask = renderable.meshPart.mesh.getVertexAttributes().getMask();
-        return renderable.environment != null &&
-                (hasNormal(vertexMask) || hasTangentAndBiNormal(vertexMask));
+        return renderable.environment != null && hasNormal(vertexMask);
     }
 
     private boolean hasNormal(long vertexMask) {
         return (vertexMask & VertexAttributes.Usage.Normal) != 0;
     }
-
-    private boolean hasTangentAndBiNormal(long vertexMask) {
-        return (vertexMask & VertexAttributes.Usage.Tangent) != 0 && (vertexMask & VertexAttributes.Usage.BiNormal) != 0;
-    }
-
 }
