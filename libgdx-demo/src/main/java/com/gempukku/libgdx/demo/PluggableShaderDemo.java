@@ -39,6 +39,9 @@ public class PluggableShaderDemo extends ApplicationAdapter {
 
     private long lastProcessedInput;
 
+    private int topSceneIndex = 0;
+    private int sceneCountDisplayed = 5;
+
     public PluggableShaderDemo(int width, int height) {
         this.width = width;
         this.height = height;
@@ -90,12 +93,14 @@ public class PluggableShaderDemo extends ApplicationAdapter {
         spriteBatch.begin();
         listFont.setColor(Color.WHITE);
         listFont.draw(spriteBatch, "Use up and down arrows to change scene", 3, height - 30);
-        for (int i = 0; i < demoSceneNames.size(); i++) {
+        int i = Math.max(0, topSceneIndex);
+        for (int j = 0; j < sceneCountDisplayed; j++) {
             if (currentSceneIndex == i)
                 listFont.setColor(Color.RED);
             else
                 listFont.setColor(Color.WHITE);
-            listFont.draw(spriteBatch, (i + 1) + ". " + demoSceneNames.get(i), 3, height - 50 - i * 20);
+            listFont.draw(spriteBatch, (i + 1) + ". " + demoSceneNames.get(i), 3, height - 50 - (i - topSceneIndex) * 20);
+            i++;
         }
         titleFont.draw(spriteBatch, currentSceneName, 0, height - 5, width, Align.center, false);
         titleFont.draw(spriteBatch, "FPS: " + fps, 0, 20, width, Align.right, false);
@@ -123,6 +128,11 @@ public class PluggableShaderDemo extends ApplicationAdapter {
                 currentSceneName = demoSceneNames.get(newIndex);
                 currentSceneIndex = newIndex;
                 lastProcessedInput = currentTime;
+
+                if (newIndex <= topSceneIndex && topSceneIndex > 0)
+                    topSceneIndex--;
+                if (newIndex >= topSceneIndex + sceneCountDisplayed - 1 && topSceneIndex < demoScenes.size() - sceneCountDisplayed)
+                    topSceneIndex++;
 
                 bestTime = 1000 * 1000000;
             }
