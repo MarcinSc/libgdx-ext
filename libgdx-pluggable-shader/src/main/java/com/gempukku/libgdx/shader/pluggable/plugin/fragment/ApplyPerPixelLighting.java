@@ -16,9 +16,11 @@ import java.util.List;
 public class ApplyPerPixelLighting extends AbstractPluggableFragmentFunctionCall {
     private PluggableFragmentFunctionCall lightDiffuseSource;
     private PluggableFragmentFunctionCall lightSpecularSource;
+    private PluggableFragmentFunctionCall normalSource;
     private List<PerPixelLightingApplyFunction> lightingApplyFunctions = new LinkedList<PerPixelLightingApplyFunction>();
 
     private List<PerPixelLightingCalculateFunctionCall> lightWrappers = new LinkedList<PerPixelLightingCalculateFunctionCall>();
+    private List<PluggableFragmentFunctionCall> normalWrappers = new LinkedList<PluggableFragmentFunctionCall>();
 
     public ApplyPerPixelLighting() {
     }
@@ -33,6 +35,14 @@ public class ApplyPerPixelLighting extends AbstractPluggableFragmentFunctionCall
 
     public void setLightSpecularSource(PluggableFragmentFunctionCall lightSpecularSource) {
         this.lightSpecularSource = lightSpecularSource;
+    }
+
+    public void setNormalSource(PluggableFragmentFunctionCall normalSource) {
+        this.normalSource = normalSource;
+    }
+
+    public void addNormalWrapper(PluggableFragmentFunctionCall normalWrapper) {
+        this.normalWrappers.add(normalWrapper);
     }
 
     public void addLightWrapper(PerPixelLightingCalculateFunctionCall lightWrapper) {
@@ -54,6 +64,13 @@ public class ApplyPerPixelLighting extends AbstractPluggableFragmentFunctionCall
         lightDiffuseSource.appendShaderFeatures(renderable, pluggableShaderFeatures);
         if (hasSpecular)
             lightSpecularSource.appendShaderFeatures(renderable, pluggableShaderFeatures);
+
+        normalSource.appendShaderFeatures(renderable, pluggableShaderFeatures);
+        for (PluggableFragmentFunctionCall normalWrapper : normalWrappers) {
+            if (normalWrapper.isProcessing(renderable))
+                normalWrapper.appendShaderFeatures(renderable, pluggableShaderFeatures);
+        }
+
         for (PerPixelLightingCalculateFunctionCall lightWrapper : lightWrappers) {
             if (lightWrapper.isProcessing(renderable, hasSpecular))
                 lightWrapper.appendShaderFeatures(renderable, pluggableShaderFeatures, hasSpecular);
@@ -68,15 +85,25 @@ public class ApplyPerPixelLighting extends AbstractPluggableFragmentFunctionCall
                 "  vec3 diffuse;\n" +
                         "  vec3 specular;\n");
         fragmentShaderBuilder.addVaryingVariable("v_vertexWorldPosition", "vec4");
-        fragmentShaderBuilder.addVaryingVariable("v_normal", "vec3");
 
         boolean specularCalculation = lightSpecularSource.isProcessing(renderable);
         lightDiffuseSource.appendFunction(renderable, fragmentShaderBuilder);
         if (specularCalculation)
             lightSpecularSource.appendFunction(renderable, fragmentShaderBuilder);
 
+        normalSource.appendFunction(renderable, fragmentShaderBuilder);
+
         StringBuilder function = new StringBuilder();
         function.append("vec4 applyPerPixelLighting(vec4 color) {\n");
+
+        function.append("  vec3 normal = " + normalSource.getFunctionName(renderable) + "(v_vertexWorldPosition);\n");
+        for (PluggableFragmentFunctionCall normalWrapper : normalWrappers) {
+            if (normalWrapper.isProcessing(renderable)) {
+                normalWrapper.appendFunction(renderable, fragmentShaderBuilder);
+                function.append("  normal = " + normalWrapper.getFunctionName(renderable) + "(v_vertexWorldPosition, normal);\n");
+            }
+        }
+
         function.append("  vec3 lightDiffuse = " + lightDiffuseSource.getFunctionName(renderable) + "(v_vertexWorldPosition);\n");
         if (specularCalculation)
             function.append("  vec3 lightSpecular = " + lightSpecularSource.getFunctionName(renderable) + "(v_vertexWorldPosition);\n");
@@ -92,7 +119,7 @@ public class ApplyPerPixelLighting extends AbstractPluggableFragmentFunctionCall
             for (PerPixelLightingCalculateFunctionCall lightWrapper : lightWrappers) {
                 if (lightWrapper.isProcessing(renderable, specularCalculation)) {
                     lightWrapper.appendFunction(renderable, fragmentShaderBuilder, specularCalculation);
-                    function.append("  lighting = " + lightWrapper.getFunctionName(renderable, specularCalculation) + "(v_vertexWorldPosition, lighting);\n");
+                    function.append("  lighting = " + lightWrapper.getFunctionName(renderable, specularCalculation) + "(v_vertexWorldPosition, normal, lighting);\n");
                 }
             }
 

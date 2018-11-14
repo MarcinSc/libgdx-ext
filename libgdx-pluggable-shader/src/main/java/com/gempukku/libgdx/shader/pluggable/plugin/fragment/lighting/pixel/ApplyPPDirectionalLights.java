@@ -82,16 +82,16 @@ public class ApplyPPDirectionalLights implements PerPixelLightingCalculateFuncti
         }
 
         StringBuilder function = new StringBuilder();
-        function.append("Lighting applyDirectionalLights(vec4 pos, Lighting lighting) {\n");
+        function.append("Lighting applyDirectionalLights(vec4 pos, vec3 normal, Lighting lighting) {\n");
         if (hasSpecular)
             function.append("  vec3 viewVec = normalize(u_cameraPosition.xyz - pos.xyz);\n");
         function.append("  for (int i = 0; i < " + numDirectionalLights + "; i++) {\n" +
                 "    vec3 lightDir = -u_dirLights[i].direction;\n" +
-                "    float NdotL = clamp(dot(v_normal, lightDir), 0.0, 1.0);\n" +
+                "    float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);\n" +
                 "    vec3 value = u_dirLights[i].color * NdotL;\n" +
                 "    lighting.diffuse += value;\n");
         if (hasSpecular) {
-            function.append("    float halfDotView = max(0.0, dot(v_normal, normalize(lightDir + viewVec)));\n" +
+            function.append("    float halfDotView = max(0.0, dot(normal, normalize(lightDir + viewVec)));\n" +
                     "    lighting.specular += value * pow(halfDotView, u_shininess);\n");
         }
         function.append("  }\n");

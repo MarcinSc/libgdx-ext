@@ -155,6 +155,7 @@ public class RedCubeDemoScene implements DemoScene {
         ApplyPerPixelLighting applyPerPixelLighting = new ApplyPerPixelLighting();
         applyPerPixelLighting.setLightDiffuseSource(new DarkDiffusePPSource());
         applyPerPixelLighting.setLightSpecularSource(new DarkSpecularPPSource());
+        applyPerPixelLighting.setNormalSource(new VaryingNormalSource());
 
         applyPerPixelLighting.addLightWrapper(new ApplyPPAmbientCubemapDiffuseLight(2, 5));
         applyPerPixelLighting.addLightWrapper(new ApplyPPDirectionalLights(2));
