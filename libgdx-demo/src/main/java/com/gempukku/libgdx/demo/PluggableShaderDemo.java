@@ -58,8 +58,8 @@ public class PluggableShaderDemo extends ApplicationAdapter {
         addDemoScene("Cube - Default shader", new RedCubeDemoScene(RedCubeDemoScene.Mode.DEFAULT));
         addDemoScene("Cube - PVL (Per vertex lighting)", new RedCubeDemoScene(RedCubeDemoScene.Mode.PLUGGABLE_PER_VERTEX));
         addDemoScene("Cube - PPL (Per pixel lighting)", new RedCubeDemoScene(RedCubeDemoScene.Mode.PLUGGABLE_PER_PIXEL));
-        addDemoScene("Cube - PVL with cel-shading count", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PV_STEP));
-        addDemoScene("Cube - PPL with cel-shading count", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PP_STEP));
+        addDemoScene("Cube - PVL with cel-shading step", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PV_STEP));
+        addDemoScene("Cube - PPL with cel-shading step", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PP_STEP));
         addDemoScene("Cube - PVL with cel-shading texture", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PV_TEXTURE));
         addDemoScene("Cube - PPL with cel-shading texture", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PP_TEXTURE));
 
@@ -88,12 +88,14 @@ public class PluggableShaderDemo extends ApplicationAdapter {
         }
 
         spriteBatch.begin();
+        listFont.setColor(Color.WHITE);
+        listFont.draw(spriteBatch, "Use up and down arrows to change scene", 3, height - 30);
         for (int i = 0; i < demoSceneNames.size(); i++) {
             if (currentSceneIndex == i)
                 listFont.setColor(Color.RED);
             else
                 listFont.setColor(Color.WHITE);
-            listFont.draw(spriteBatch, (i + 1) + ". " + demoSceneNames.get(i), 3, height - 30 - i * 20);
+            listFont.draw(spriteBatch, (i + 1) + ". " + demoSceneNames.get(i), 3, height - 50 - i * 20);
         }
         titleFont.draw(spriteBatch, currentSceneName, 0, height - 5, width, Align.center, false);
         titleFont.draw(spriteBatch, "FPS: " + fps, 0, 20, width, Align.right, false);
