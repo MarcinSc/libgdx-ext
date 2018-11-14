@@ -1,6 +1,8 @@
 package com.gempukku.libgdx.shader.pluggable.plugin.vertex.lighting.vertex;
 
 import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.utils.Predicate;
 import com.gempukku.libgdx.shader.pluggable.AbstractPluggableVertexFunctionCall;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatureRegistry;
@@ -37,6 +39,6 @@ public class DarkSpecularPVSource extends AbstractPluggableVertexFunctionCall {
 
     @Override
     protected boolean isProcessingForRenderable(Renderable renderable) {
-        return true;
+        return renderable.material.has(TextureAttribute.Specular) || renderable.material.has(ColorAttribute.Specular);
     }
 }

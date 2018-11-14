@@ -1,25 +1,25 @@
-package com.gempukku.libgdx.plugin.cellshading.count;
+package com.gempukku.libgdx.plugin.cellshading.step;
 
 import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.gempukku.libgdx.shader.pluggable.CommonShaderBuilder;
+import com.gempukku.libgdx.shader.pluggable.FragmentShaderBuilder;
 import com.gempukku.libgdx.shader.pluggable.GLSLFragmentReader;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatureRegistry;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatures;
 
 import java.util.Collections;
 
-public class CelShadingCountDiffuseTransform {
+public class CelShadingStepLightingApplyFunction {
     private int shadeCountMaximum;
     // Separate due to shade count
     private PluggableShaderFeatureRegistry.PluggableShaderFeature[] celShadingCountFeatures;
 
-    public CelShadingCountDiffuseTransform(int shadeCountMaximum) {
+    public CelShadingStepLightingApplyFunction(int shadeCountMaximum) {
         this.shadeCountMaximum = shadeCountMaximum;
         this.celShadingCountFeatures = new PluggableShaderFeatureRegistry.PluggableShaderFeature[shadeCountMaximum];
     }
 
     public String getFunctionName(Renderable renderable, boolean hasSpecular) {
-        return "applyCelShadingCount";
+        return "celShadingLightingApply";
     }
 
     public void appendShaderFeatures(Renderable renderable, PluggableShaderFeatures pluggableShaderFeatures, boolean hasSpecular) {
@@ -30,29 +30,34 @@ public class CelShadingCountDiffuseTransform {
             celShadingCountFeatures[celShadeCount - 1] = celShadingFeature;
         }
         pluggableShaderFeatures.addFeature(celShadingFeature);
+
     }
 
-    public void appendPerPixelFunction(Renderable renderable, CommonShaderBuilder fragmentShaderBuilder, boolean hasSpecular) {
+    public void appendPerVertexFunction(Renderable renderable, FragmentShaderBuilder fragmentShaderBuilder, boolean hasSpecular) {
         int shadeCount = getCelShadeCount(renderable);
         String shadeCountFlt = shadeCount + ".0";
-        fragmentShaderBuilder.addFunction("applyCelShadingCount",
-                GLSLFragmentReader.getFragment("CelShadingCountDiffusePPTransform",
+        String fragmentName = hasSpecular ? "CelShadingStepPVSpecularLightingApply" : "CelShadingStepPVLightingApply";
+        fragmentShaderBuilder.addFunction("celShadingLightingApply",
+                GLSLFragmentReader.getFragment(fragmentName,
                         Collections.singletonMap("shadeCountFlt", shadeCountFlt)));
+
     }
 
-    public void appendPerVertexFunction(Renderable renderable, CommonShaderBuilder fragmentShaderBuilder, boolean hasSpecular) {
+    public void appendPerPixelFunction(Renderable renderable, FragmentShaderBuilder fragmentShaderBuilder, boolean hasSpecular) {
         int shadeCount = getCelShadeCount(renderable);
         String shadeCountFlt = shadeCount + ".0";
-        fragmentShaderBuilder.addFunction("applyCelShadingCount",
-                GLSLFragmentReader.getFragment("CelShadingCountDiffusePVTransform",
+        String fragmentName = hasSpecular ? "CelShadingStepPPSpecularLightingApply" : "CelShadingStepPPLightingApply";
+        fragmentShaderBuilder.addFunction("celShadingLightingApply",
+                GLSLFragmentReader.getFragment(fragmentName,
                         Collections.singletonMap("shadeCountFlt", shadeCountFlt)));
+
     }
 
     private int getCelShadeCount(Renderable renderable) {
-        return Math.min(shadeCountMaximum, renderable.material.get(CelShadingCountAttribute.class, CelShadingCountAttribute.CelShading).value);
+        return Math.min(shadeCountMaximum, renderable.material.get(CelShadingStepAttribute.class, CelShadingStepAttribute.CelShading).value);
     }
 
     public boolean isProcessing(Renderable renderable, boolean hasSpecular) {
-        return renderable.material.has(CelShadingCountAttribute.CelShading) && !hasSpecular;
+        return renderable.material.has(CelShadingStepAttribute.CelShading);
     }
 }

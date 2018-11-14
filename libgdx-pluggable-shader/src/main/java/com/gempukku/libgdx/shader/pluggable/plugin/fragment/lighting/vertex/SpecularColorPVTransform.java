@@ -8,7 +8,7 @@ import com.gempukku.libgdx.shader.pluggable.GLSLFragmentReader;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatureRegistry;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatures;
 
-public class SpecularColorPVTransform implements PerVertexLightingApplyFunctionCall {
+public class SpecularColorPVTransform implements PerVertexLightingWrapperFunctionCall {
     private static PluggableShaderFeatureRegistry.PluggableShaderFeature specularTexture = PluggableShaderFeatureRegistry.registerFeature();
 
     @Override

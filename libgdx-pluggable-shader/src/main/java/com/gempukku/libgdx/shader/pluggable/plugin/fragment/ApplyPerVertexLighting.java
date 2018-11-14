@@ -2,11 +2,10 @@ package com.gempukku.libgdx.shader.pluggable.plugin.fragment;
 
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.utils.Predicate;
 import com.gempukku.libgdx.shader.pluggable.*;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.PerVertexLightingApplyFunctionCall;
+import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.PerVertexLightingApplyFunction;
+import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.PerVertexLightingWrapperFunctionCall;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -16,8 +15,9 @@ public class ApplyPerVertexLighting extends AbstractPluggableFragmentFunctionCal
 
     private PluggableFragmentFunctionCall lightDiffuseSource;
     private PluggableFragmentFunctionCall lightSpecularSource;
+    private List<PerVertexLightingApplyFunction> lightingApplyFunctions = new LinkedList<PerVertexLightingApplyFunction>();
 
-    private List<PerVertexLightingApplyFunctionCall> lightWrappers = new LinkedList<PerVertexLightingApplyFunctionCall>();
+    private List<PerVertexLightingWrapperFunctionCall> lightWrappers = new LinkedList<PerVertexLightingWrapperFunctionCall>();
 
     public ApplyPerVertexLighting() {
     }
@@ -34,7 +34,11 @@ public class ApplyPerVertexLighting extends AbstractPluggableFragmentFunctionCal
         this.lightSpecularSource = lightSpecularSource;
     }
 
-    public void addLightWrapper(PerVertexLightingApplyFunctionCall lightWrapper) {
+    public void addLightingApplyFunction(PerVertexLightingApplyFunction lightingApplyFunction) {
+        this.lightingApplyFunctions.add(lightingApplyFunction);
+    }
+
+    public void addLightWrapper(PerVertexLightingWrapperFunctionCall lightWrapper) {
         lightWrappers.add(lightWrapper);
     }
 
@@ -47,14 +51,16 @@ public class ApplyPerVertexLighting extends AbstractPluggableFragmentFunctionCal
     public void appendShaderFeatures(Renderable renderable, PluggableShaderFeatures pluggableShaderFeatures) {
         pluggableShaderFeatures.addFeature(applyPerVertexLighting);
         lightDiffuseSource.appendShaderFeatures(renderable, pluggableShaderFeatures);
-        boolean hasSpecular = hasSpecularCalculation(renderable);
+        boolean hasSpecular = lightSpecularSource.isProcessing(renderable);
         if (hasSpecular)
             lightSpecularSource.appendShaderFeatures(renderable, pluggableShaderFeatures);
 
-        for (PerVertexLightingApplyFunctionCall lightWrapper : lightWrappers) {
+        for (PerVertexLightingWrapperFunctionCall lightWrapper : lightWrappers) {
             if (lightWrapper.isProcessing(renderable, hasSpecular))
                 lightWrapper.appendShaderFeatures(renderable, pluggableShaderFeatures, hasSpecular);
         }
+
+        findFirstMatchingLightingApplyFunction(renderable, hasSpecular).appendShaderFeatures(renderable, pluggableShaderFeatures, hasSpecular);
     }
 
     @Override
@@ -63,9 +69,8 @@ public class ApplyPerVertexLighting extends AbstractPluggableFragmentFunctionCal
                 "vec3 diffuse;\n" +
                         "vec3 specular;\n");
 
-
         lightDiffuseSource.appendFunction(renderable, fragmentShaderBuilder);
-        boolean specularCalculation = hasSpecularCalculation(renderable);
+        boolean specularCalculation = lightSpecularSource.isProcessing(renderable);
         if (specularCalculation)
             lightSpecularSource.appendFunction(renderable, fragmentShaderBuilder);
 
@@ -78,23 +83,28 @@ public class ApplyPerVertexLighting extends AbstractPluggableFragmentFunctionCal
         else
             function.append("  vec3 specular = vec3(0.0);\n");
 
+        PerVertexLightingApplyFunction lightingApplyFunction = findFirstMatchingLightingApplyFunction(renderable, specularCalculation);
+        lightingApplyFunction.appendFunction(renderable, fragmentShaderBuilder, specularCalculation);
+
         if (lightWrappers.size() > 0) {
             function.append("  Lighting lighting = Lighting(diffuse, specular);\n");
 
-            for (PerVertexLightingApplyFunctionCall lightWrapper : lightWrappers) {
+            for (PerVertexLightingWrapperFunctionCall lightWrapper : lightWrappers) {
                 if (lightWrapper.isProcessing(renderable, specularCalculation)) {
                     lightWrapper.appendFunction(renderable, fragmentShaderBuilder, specularCalculation);
                     function.append("  lighting = " + lightWrapper.getFunctionName(renderable, specularCalculation) + "(lighting);\n");
                 }
             }
 
-            function.append("  color.rgb = color.rgb * lighting.diffuse;\n");
             if (specularCalculation)
-                function.append("  color.rgb = color.rgb + lighting.specular;\n");
+                function.append("  color.rgb = " + lightingApplyFunction.getFunctionName(renderable, specularCalculation) + "(color.rgb, lighting.diffuse, lighting.specular);");
+            else
+                function.append("  color.rgb = " + lightingApplyFunction.getFunctionName(renderable, specularCalculation) + "(color.rgb, lighting.diffuse);");
         } else {
-            function.append("  color.rgb = color.rgb * diffuse;\n");
             if (specularCalculation)
-                function.append("  color.rgb = color.rgb + specular;\n");
+                function.append("  color.rgb = " + lightingApplyFunction.getFunctionName(renderable, specularCalculation) + "(color.rgb, diffuse, specular);");
+            else
+                function.append("  color.rgb = " + lightingApplyFunction.getFunctionName(renderable, specularCalculation) + "(color.rgb, diffuse);");
         }
 
         function.append("  return color;\n" +
@@ -103,15 +113,19 @@ public class ApplyPerVertexLighting extends AbstractPluggableFragmentFunctionCal
         fragmentShaderBuilder.addFunction("applyPerVertexLighting", function.toString());
     }
 
+    private PerVertexLightingApplyFunction findFirstMatchingLightingApplyFunction(Renderable renderable, boolean hasSpecular) {
+        for (PerVertexLightingApplyFunction lightingApplyFunction : lightingApplyFunctions) {
+            if (lightingApplyFunction.isProcessing(renderable, hasSpecular))
+                return lightingApplyFunction;
+        }
+        throw new IllegalStateException("Unable to find lighting apply function");
+    }
+
     @Override
     protected boolean isProcessingForRenderable(Renderable renderable) {
         long vertexMask = renderable.meshPart.mesh.getVertexAttributes().getMask();
         return renderable.environment != null &&
                 (hasNormal(vertexMask) || hasTangentAndBiNormal(vertexMask));
-    }
-
-    private boolean hasSpecularCalculation(Renderable renderable) {
-        return renderable.material.has(TextureAttribute.Specular) || renderable.material.has(ColorAttribute.Specular);
     }
 
     private boolean hasNormal(long vertexMask) {

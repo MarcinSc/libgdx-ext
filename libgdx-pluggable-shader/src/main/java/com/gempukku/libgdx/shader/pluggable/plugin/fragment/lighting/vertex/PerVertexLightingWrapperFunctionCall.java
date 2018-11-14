@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.gempukku.libgdx.shader.pluggable.FragmentShaderBuilder;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatures;
 
-public interface PerVertexLightingApplyFunctionCall {
+public interface PerVertexLightingWrapperFunctionCall {
     String getFunctionName(Renderable renderable, boolean hasSpecular);
 
     void appendShaderFeatures(Renderable renderable, PluggableShaderFeatures pluggableShaderFeatures, boolean hasSpecular);

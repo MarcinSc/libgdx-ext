@@ -1,6 +1,8 @@
 package com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.pixel;
 
 import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.utils.Predicate;
 import com.gempukku.libgdx.shader.pluggable.AbstractPluggableFragmentFunctionCall;
 import com.gempukku.libgdx.shader.pluggable.FragmentShaderBuilder;
@@ -37,6 +39,6 @@ public class DarkSpecularPPSource extends AbstractPluggableFragmentFunctionCall 
 
     @Override
     protected boolean isProcessingForRenderable(Renderable renderable) {
-        return true;
+        return renderable.material.has(TextureAttribute.Specular) || renderable.material.has(ColorAttribute.Specular);
     }
 }

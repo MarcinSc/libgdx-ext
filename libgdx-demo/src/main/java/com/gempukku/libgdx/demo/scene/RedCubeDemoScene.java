@@ -1,27 +1,25 @@
 package com.gempukku.libgdx.demo.scene;
 
-import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.gempukku.libgdx.demo.DemoScene;
-import com.gempukku.libgdx.plugin.cellshading.count.CelShadingCountAttribute;
-import com.gempukku.libgdx.plugin.cellshading.count.CelShadingCountPPDiffuseTransform;
-import com.gempukku.libgdx.plugin.cellshading.count.CelShadingCountPVDiffuseTransform;
+import com.gempukku.libgdx.plugin.cellshading.step.CelShadingStepAttribute;
+import com.gempukku.libgdx.plugin.cellshading.step.CelShadingStepPPLightingApplyFunction;
+import com.gempukku.libgdx.plugin.cellshading.step.CelShadingStepPVLightingApplyFunction;
+import com.gempukku.libgdx.plugin.cellshading.texture.CelShadingTextureAttribute;
+import com.gempukku.libgdx.plugin.cellshading.texture.CelShadingTexturePPLightingApplyFunction;
+import com.gempukku.libgdx.plugin.cellshading.texture.CelShadingTexturePVLightingApplyFunction;
 import com.gempukku.libgdx.shader.pluggable.DefaultPluggableShaderBuilder;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderProvider;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderUtil;
 import com.gempukku.libgdx.shader.pluggable.plugin.fragment.*;
 import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.pixel.*;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.DiffusePVAttributeSource;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.SpecularColorPVTransform;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.SpecularPVAttributeSource;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.SpecularTexturePVTransform;
+import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.*;
 import com.gempukku.libgdx.shader.pluggable.plugin.initializer.CullFaceInitializer;
 import com.gempukku.libgdx.shader.pluggable.plugin.initializer.DepthTestInitializer;
 import com.gempukku.libgdx.shader.pluggable.plugin.vertex.*;
@@ -29,7 +27,9 @@ import com.gempukku.libgdx.shader.pluggable.plugin.vertex.lighting.vertex.*;
 
 public class RedCubeDemoScene implements DemoScene {
     public enum Mode {
-        DEFAULT, PLUGGABLE_PER_VERTEX, PLUGGABLE_PER_PIXEL, CELSHADING_PER_VERTEX, CELSHADING_PER_PIXEL
+        DEFAULT, PLUGGABLE_PER_VERTEX, PLUGGABLE_PER_PIXEL,
+        CELSHADING_PV_STEP, CELSHADING_PP_STEP,
+        CELSHADING_PV_TEXTURE, CELSHADING_PP_TEXTURE
     }
 
     private Camera camera;
@@ -40,6 +40,7 @@ public class RedCubeDemoScene implements DemoScene {
     private ModelInstance base;
     private Environment environment;
     private Mode mode;
+    private Texture celShadingTexture;
 
     public RedCubeDemoScene(Mode mode) {
         this.mode = mode;
@@ -50,15 +51,19 @@ public class RedCubeDemoScene implements DemoScene {
             return new PluggableShaderProvider(PluggableShaderUtil.createPerVertexLightingPluggableShaderBuilder());
         else if (this.mode == Mode.PLUGGABLE_PER_PIXEL)
             return new PluggableShaderProvider(PluggableShaderUtil.createPerPixelLightingPluggableShaderBuilder());
-        else if (this.mode == Mode.CELSHADING_PER_VERTEX)
-            return createCellShadingPVLShaderProvider();
-        else if (this.mode == Mode.CELSHADING_PER_PIXEL)
-            return createCellShadingPPLShaderProvider();
+        else if (this.mode == Mode.CELSHADING_PV_STEP)
+            return createCellShadingPVLShaderProvider(new CelShadingStepPVLightingApplyFunction(10));
+        else if (this.mode == Mode.CELSHADING_PP_STEP)
+            return createCellShadingPPLShaderProvider(new CelShadingStepPPLightingApplyFunction(10));
+        else if (this.mode == Mode.CELSHADING_PV_TEXTURE)
+            return createCellShadingPVLShaderProvider(new CelShadingTexturePVLightingApplyFunction());
+        else if (this.mode == Mode.CELSHADING_PP_TEXTURE)
+            return createCellShadingPPLShaderProvider(new CelShadingTexturePPLightingApplyFunction());
 
         return null;
     }
 
-    private ShaderProvider createCellShadingPVLShaderProvider() {
+    private ShaderProvider createCellShadingPVLShaderProvider(PerVertexLightingApplyFunction lightingApplyFunction) {
         DefaultPluggableShaderBuilder defaultPluggableShaderBuilder = new DefaultPluggableShaderBuilder();
 
         // Initializers
@@ -106,7 +111,8 @@ public class RedCubeDemoScene implements DemoScene {
         perVertexLightingApplyCall.addLightWrapper(new SpecularTexturePVTransform());
         perVertexLightingApplyCall.addLightWrapper(new SpecularColorPVTransform());
 
-        perVertexLightingApplyCall.addLightWrapper(new CelShadingCountPVDiffuseTransform(10));
+        perVertexLightingApplyCall.addLightingApplyFunction(lightingApplyFunction);
+        perVertexLightingApplyCall.addLightingApplyFunction(new DefaultPerVertexLightingApplyFunction());
 
         defaultPluggableShaderBuilder.addColorProcessor(perVertexLightingApplyCall);
 
@@ -116,7 +122,7 @@ public class RedCubeDemoScene implements DemoScene {
         return new PluggableShaderProvider(defaultPluggableShaderBuilder);
     }
 
-    private ShaderProvider createCellShadingPPLShaderProvider() {
+    private ShaderProvider createCellShadingPPLShaderProvider(PerPixelLightingApplyFunction lightingApplyFunction) {
         DefaultPluggableShaderBuilder defaultPluggableShaderBuilder = new DefaultPluggableShaderBuilder();
 
         // Initializers
@@ -156,7 +162,8 @@ public class RedCubeDemoScene implements DemoScene {
         applyPerPixelLighting.addLightWrapper(new SpecularTexturePPTransform());
         applyPerPixelLighting.addLightWrapper(new SpecularColorPPTransform());
 
-        applyPerPixelLighting.addLightWrapper(new CelShadingCountPPDiffuseTransform(10));
+        applyPerPixelLighting.addLightingApplyFunction(lightingApplyFunction);
+        applyPerPixelLighting.addLightingApplyFunction(new DefaultPerPixelLightingApplyFunction());
 
         defaultPluggableShaderBuilder.addColorProcessor(applyPerPixelLighting);
 
@@ -170,13 +177,15 @@ public class RedCubeDemoScene implements DemoScene {
     public void initialize(int width, int height) {
         modelBatch = new ModelBatch(createShaderProvider());
 
+        celShadingTexture = new Texture(Gdx.files.internal("texture/celShadingTexture.png"));
         camera = new PerspectiveCamera(75, width, height);
 
         ModelBuilder modelBuilder = new ModelBuilder();
         cubeModel = modelBuilder.createBox(1, 1, 1,
                 new Material(
                         ColorAttribute.createDiffuse(1, 0, 0, 1),
-                        CelShadingCountAttribute.createAttribute(10)),
+                        CelShadingStepAttribute.createAttribute(10),
+                        CelShadingTextureAttribute.createAttribute(celShadingTexture)),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         cube = new ModelInstance(cubeModel);
         cube.transform.rotate(1f, 1f, 0, 50);
@@ -199,7 +208,7 @@ public class RedCubeDemoScene implements DemoScene {
         camera.update();
 
         PointLight pointLight = new PointLight();
-        pointLight.set(Color.WHITE, 1, 2, 2.5f, 8f);
+        pointLight.set(Color.WHITE, 1, 1, 2.5f, 8f);
 
         environment = new Environment();
 
@@ -208,6 +217,8 @@ public class RedCubeDemoScene implements DemoScene {
 
     @Override
     public void render(float delta) {
+        cube.transform.rotate(0, 1, 0, 20 * delta);
+
         modelBatch.begin(camera);
         modelBatch.render(cube, environment);
         modelBatch.render(base, environment);
@@ -216,6 +227,7 @@ public class RedCubeDemoScene implements DemoScene {
 
     @Override
     public void dispose() {
+        celShadingTexture.dispose();
         cubeModel.dispose();
         baseModel.dispose();
         modelBatch.dispose();

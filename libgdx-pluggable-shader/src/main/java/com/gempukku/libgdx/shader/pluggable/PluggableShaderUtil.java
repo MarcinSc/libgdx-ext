@@ -3,10 +3,7 @@ package com.gempukku.libgdx.shader.pluggable;
 
 import com.gempukku.libgdx.shader.pluggable.plugin.fragment.*;
 import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.pixel.*;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.DiffusePVAttributeSource;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.SpecularColorPVTransform;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.SpecularPVAttributeSource;
-import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.SpecularTexturePVTransform;
+import com.gempukku.libgdx.shader.pluggable.plugin.fragment.lighting.vertex.*;
 import com.gempukku.libgdx.shader.pluggable.plugin.initializer.CullFaceInitializer;
 import com.gempukku.libgdx.shader.pluggable.plugin.initializer.DepthTestInitializer;
 import com.gempukku.libgdx.shader.pluggable.plugin.vertex.*;
@@ -66,6 +63,7 @@ public class PluggableShaderUtil {
         perVertexLightingApplyCall.setLightSpecularSource(new SpecularPVAttributeSource());
         perVertexLightingApplyCall.addLightWrapper(new SpecularTexturePVTransform());
         perVertexLightingApplyCall.addLightWrapper(new SpecularColorPVTransform());
+        perVertexLightingApplyCall.addLightingApplyFunction(new DefaultPerVertexLightingApplyFunction());
 
         defaultPluggableShaderBuilder.addColorProcessor(perVertexLightingApplyCall);
 
@@ -114,6 +112,7 @@ public class PluggableShaderUtil {
         applyPerPixelLighting.addLightWrapper(new ApplyPPPointLights(5));
         applyPerPixelLighting.addLightWrapper(new SpecularTexturePPTransform());
         applyPerPixelLighting.addLightWrapper(new SpecularColorPPTransform());
+        applyPerPixelLighting.addLightingApplyFunction(new DefaultPerPixelLightingApplyFunction());
 
         defaultPluggableShaderBuilder.addColorProcessor(applyPerPixelLighting);
 

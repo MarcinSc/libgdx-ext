@@ -56,10 +56,12 @@ public class PluggableShaderDemo extends ApplicationAdapter {
         spriteBatch = new SpriteBatch();
 
         addDemoScene("Cube - Default shader", new RedCubeDemoScene(RedCubeDemoScene.Mode.DEFAULT));
-        addDemoScene("Cube - Pluggable PVL (Per vertex lighting)", new RedCubeDemoScene(RedCubeDemoScene.Mode.PLUGGABLE_PER_VERTEX));
-        addDemoScene("Cube - Pluggable PPL (Per pixel lighting)", new RedCubeDemoScene(RedCubeDemoScene.Mode.PLUGGABLE_PER_PIXEL));
-        addDemoScene("Cube - Pluggable PVL with cel-shading", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PER_VERTEX));
-        addDemoScene("Cube - Pluggable PPL with cel-shading", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PER_PIXEL));
+        addDemoScene("Cube - PVL (Per vertex lighting)", new RedCubeDemoScene(RedCubeDemoScene.Mode.PLUGGABLE_PER_VERTEX));
+        addDemoScene("Cube - PPL (Per pixel lighting)", new RedCubeDemoScene(RedCubeDemoScene.Mode.PLUGGABLE_PER_PIXEL));
+        addDemoScene("Cube - PVL with cel-shading count", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PV_STEP));
+        addDemoScene("Cube - PPL with cel-shading count", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PP_STEP));
+        addDemoScene("Cube - PVL with cel-shading texture", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PV_TEXTURE));
+        addDemoScene("Cube - PPL with cel-shading texture", new RedCubeDemoScene(RedCubeDemoScene.Mode.CELSHADING_PP_TEXTURE));
 
         currentSceneName = demoSceneNames.get(0);
         currentScene = demoScenes.get(0);
@@ -91,7 +93,7 @@ public class PluggableShaderDemo extends ApplicationAdapter {
                 listFont.setColor(Color.RED);
             else
                 listFont.setColor(Color.WHITE);
-            listFont.draw(spriteBatch, (i + 1) + ". " + demoSceneNames.get(i), 0, height - 30 - i * 20);
+            listFont.draw(spriteBatch, (i + 1) + ". " + demoSceneNames.get(i), 3, height - 30 - i * 20);
         }
         titleFont.draw(spriteBatch, currentSceneName, 0, height - 5, width, Align.center, false);
         titleFont.draw(spriteBatch, "FPS: " + fps, 0, 20, width, Align.right, false);

@@ -9,7 +9,7 @@ import com.gempukku.libgdx.shader.pluggable.GLSLFragmentReader;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatureRegistry;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatures;
 
-public class CelShadingTextureDiffuseTransform {
+public class CelShadingTextureLightingApplyFunction {
     private final static UniformRegistry.UniformSetter celShadingTexture = new UniformRegistry.UniformSetter() {
         @Override
         public void set(BasicShader shader, int location, Renderable renderable, Attributes combinedAttributes) {
@@ -22,7 +22,7 @@ public class CelShadingTextureDiffuseTransform {
     private static PluggableShaderFeatureRegistry.PluggableShaderFeature celShadingFeature = PluggableShaderFeatureRegistry.registerFeature();
 
     public String getFunctionName(Renderable renderable, boolean hasSpecular) {
-        return "applyCelShadingTexture";
+        return "celShadingTextureLightingApply";
     }
 
     public void appendShaderFeatures(Renderable renderable, PluggableShaderFeatures pluggableShaderFeatures, boolean hasSpecular) {
@@ -31,18 +31,19 @@ public class CelShadingTextureDiffuseTransform {
 
     public void appendPerPixelFunction(Renderable renderable, CommonShaderBuilder fragmentShaderBuilder, boolean hasSpecular) {
         fragmentShaderBuilder.addUniformVariable("u_celShadingTexture", "sampler2D", false, celShadingTexture);
-        fragmentShaderBuilder.addFunction("applyCelShadingTexture",
-                GLSLFragmentReader.getFragment("CelShadingDiffusePPTransform"));
+        String fragmentName = hasSpecular ? "CelShadingTexturePPSpecularLightingApply" : "CelShadingTexturePPLightingApply";
+        fragmentShaderBuilder.addFunction("celShadingTextureLightingApply",
+                GLSLFragmentReader.getFragment(fragmentName));
     }
 
     public void appendPerVertexFunction(Renderable renderable, CommonShaderBuilder fragmentShaderBuilder, boolean hasSpecular) {
         fragmentShaderBuilder.addUniformVariable("u_celShadingTexture", "sampler2D", false, celShadingTexture);
-        fragmentShaderBuilder.addFunction("applyCelShadingTexture",
-                GLSLFragmentReader.getFragment("CelShadingDiffusePVTransform"));
+        String fragmentName = hasSpecular ? "CelShadingTexturePVSpecularLightingApply" : "CelShadingTexturePVLightingApply";
+        fragmentShaderBuilder.addFunction("celShadingTextureLightingApply",
+                GLSLFragmentReader.getFragment(fragmentName));
     }
 
     public boolean isProcessing(Renderable renderable, boolean hasSpecular) {
-        return renderable.material.has(CelShadingTextureAttribute.CelShading) && !hasSpecular;
+        return renderable.material.has(CelShadingTextureAttribute.CelShading);
     }
-
 }

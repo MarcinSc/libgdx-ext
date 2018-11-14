@@ -2,8 +2,6 @@ package com.gempukku.libgdx.shader.pluggable.plugin.vertex;
 
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.utils.Predicate;
 import com.gempukku.libgdx.shader.pluggable.AbstractPluggableVertexFunctionCall;
 import com.gempukku.libgdx.shader.pluggable.PluggableShaderFeatures;
@@ -46,7 +44,7 @@ public class PerVertexLightingCalculateCall extends AbstractPluggableVertexFunct
 
     @Override
     public void appendShaderFeatures(Renderable renderable, PluggableShaderFeatures pluggableShaderFeatures) {
-        boolean hasSpecular = hasSpecularCalculation(renderable);
+        boolean hasSpecular = lightSpecularSource.isProcessing(renderable);
         lightDiffuseSource.appendShaderFeatures(renderable, pluggableShaderFeatures);
         if (hasSpecular)
             lightSpecularSource.appendShaderFeatures(renderable, pluggableShaderFeatures);
@@ -63,7 +61,7 @@ public class PerVertexLightingCalculateCall extends AbstractPluggableVertexFunct
                         "  vec3 specular;\n");
 
         vertexShaderBuilder.addVaryingVariable("v_lightDiffuse", "vec3");
-        boolean specularCalculation = hasSpecularCalculation(renderable);
+        boolean specularCalculation = lightSpecularSource.isProcessing(renderable);
         if (specularCalculation)
             vertexShaderBuilder.addVaryingVariable("v_lightSpecular", "vec3");
 
@@ -101,10 +99,6 @@ public class PerVertexLightingCalculateCall extends AbstractPluggableVertexFunct
         long vertexMask = renderable.meshPart.mesh.getVertexAttributes().getMask();
         return renderable.environment != null &&
                 (hasNormal(vertexMask) || hasTangentAndBiNormal(vertexMask));
-    }
-
-    private boolean hasSpecularCalculation(Renderable renderable) {
-        return renderable.material.has(TextureAttribute.Specular) || renderable.material.has(ColorAttribute.Specular);
     }
 
     private boolean hasNormal(long vertexMask) {
