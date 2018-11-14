@@ -95,6 +95,8 @@ public class PluggableShaderDemo extends ApplicationAdapter {
         listFont.draw(spriteBatch, "Use up and down arrows to change scene", 3, height - 30);
         int i = Math.max(0, topSceneIndex);
         for (int j = 0; j < sceneCountDisplayed; j++) {
+            if (i == demoSceneNames.size())
+                break;
             if (currentSceneIndex == i)
                 listFont.setColor(Color.RED);
             else
